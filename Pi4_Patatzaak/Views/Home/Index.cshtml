@@ -1,0 +1,12 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+    string welcomeMessage = ViewBag.WelcomeMessage as string;
+}
+
+<div class="text-center">
+    <h1 class="display-4">@welcomeMessage</h1>
+
+    <button asp-action="EigenError">Error</button>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+

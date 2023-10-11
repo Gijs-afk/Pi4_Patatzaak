@@ -1,0 +1,32 @@
+﻿@model Pi4_Patatzaak.Models.Customer
+@{
+    Layout = null;
+
+
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Login</title>
+</head>
+<body>
+    <form asp-controller="Auth" asp-action="Login" method="post">
+        <h1>Login</h1>
+        <input type="email" placeholder="E-Mail" asp-for="Email" />
+        <input type="password" placeholder="Password" asp-for="Password" />
+        <button type="submit" class="btn btn-primary">Log In</button>
+
+        @if (ViewData["VallidateMessage"] != null)
+        {
+                    <br />
+                    <br />
+                    <label>@ViewData["VallidateMessage"]</label>
+        }
+    </form>
+
+    <p>Don't have an account? <a href="@Url.Action("SignUp", "Auth")">Sign up here</a></p>
+</body>
+</html>
