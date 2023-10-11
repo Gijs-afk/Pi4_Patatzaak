@@ -15,5 +15,7 @@ namespace Pi4_Patatzaak.Models
         public string Status { get; set; } = ("Order arived at the shop");
         public Customer Customer { get; set; }
         public List<OrderLine> Orderlines { get; set; }
+
+
     }
 }

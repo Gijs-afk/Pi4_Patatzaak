@@ -1,4 +1,5 @@
-﻿using Pi4_Patatzaak.Data;
+﻿using Microsoft.AspNetCore.Identity;
+using Pi4_Patatzaak.Data;
 using Pi4_Patatzaak.Models;
 using System.Security.Claims;
 
@@ -15,15 +16,14 @@ namespace Pi4_Patatzaak.Logic
             _dbContext = dbContext;
             _dotEnvVariables = dotEnvVariables;
             _authLogic = authLogic;
+
         }
-        public Order CreateOrder(Order order)
+        public Order CreateOrder(Order order, int UserID )
         {
 
+            order.CustomerID = UserID;
 
-
-            order.CustomerID = _authLogic.GetUserName();
-
-            if(_dotEnvVariables.StandardOrderMessage == null)
+            if (_dotEnvVariables.StandardOrderMessage == null)
             {
                 order.Status = "Error getting status";
             }

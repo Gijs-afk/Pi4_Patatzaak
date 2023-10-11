@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Azure.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -18,11 +20,13 @@ namespace Pi4_Patatzaak.Controllers
     {
         private readonly AppDbContext _context;
         private readonly OrderLogic _orderLogic;
+        private readonly AuthLogic _authLogic;
 
-        public OrdersController(AppDbContext context, OrderLogic orderLogic)
+        public OrdersController(AppDbContext context, OrderLogic orderLogic, AuthLogic authLogic)
         {
             _context = context;
             _orderLogic = orderLogic;
+            _authLogic = authLogic;
         }
 
         // GET: Orders
@@ -52,32 +56,81 @@ namespace Pi4_Patatzaak.Controllers
         }
 
         // GET: Orders/Create
-        public IActionResult Create()
-        {
-            ViewData["CustomerID"] = new SelectList(_context.Customers, "CustomerID", "CustomerName");
-            return View();
-        }
+        //public IActionResult Create()
+        //{
+        //    ViewData["CustomerID"] = new SelectList(_context.Customers, "CustomerID", "CustomerName");
+        //    return View();
+        //}
 
         // POST: Orders/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("OrderID")] Order order)
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Create([Bind("OrderID")] Order order)
+        //{
+        //    Order newOrder = new Order();
+        //    string customerName = _authLogic.GetUserName(HttpContext.User);
+        //    var customerField = _context.Customers
+        //        .Where(c => c.CustomerName == customerName)
+        //        .FirstOrDefault();
+        //    int UserID = customerField.CustomerID;
+
+        //    newOrder = _orderLogic.CreateOrder(newOrder, UserID);
+
+
+        //    if (ModelState.IsValid)
+        //    {
+        //        _context.Add(order);
+        //        await _context.SaveChangesAsync();
+        //        return RedirectToAction(nameof(Index));
+        //    }
+        //    ViewData["CustomerID"] = new SelectList(_context.Customers, "CustomerID", "CustomerName", order.CustomerID);
+        //    return View(order);
+        //}
+
+
+        [HttpGet]
+        public async Task<IActionResult> Create()
         {
-            Order newOrder = new Order();
-            newOrder = _orderLogic.CreateOrder(newOrder);
+            var products = await _context.Products.ToListAsync();
+            ViewBag.ProductList = new SelectList(products, "ProductID", "ProductName");
 
-
-            if (ModelState.IsValid)
+            var order = new Order
             {
-                _context.Add(order);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["CustomerID"] = new SelectList(_context.Customers, "CustomerID", "CustomerName", order.CustomerID);
+                Orderlines = new List<OrderLine>()
+            };
+
+            var productsAsJson = JsonSerializer.Serialize(products);
+            ViewData["Products"] = productsAsJson;
+
             return View(order);
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(Order order)
+        {
+            if (ModelState.IsValid)
+            {
+                // Create the order and save it to the database
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync();
+
+                // You will add order lines dynamically using JavaScript
+                // No need to add order lines here
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            // If the model is not valid, redisplay the form with errors
+            var products = await _context.Products.ToListAsync();
+            ViewBag.ProductList = new SelectList(products, "ProductID", "ProductName");
+            return View(order);
+        }
+
+
+
+
+
 
         // GET: Orders/Edit/5
         public async Task<IActionResult> Edit(int? id)

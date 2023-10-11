@@ -1,48 +1,95 @@
-﻿@model Pi4_Patatzaak.Models.Order
+﻿@model Order
 
-@{
-    
+@using (Html.BeginForm("Create", "Orders", FormMethod.Post))
+{
+    @Html.HiddenFor(model => model.CustomerID)
+    @Html.HiddenFor(model => model.Status)
+
+    <h4>Select Products:</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    @Html.DropDownList("ProductID", (SelectList)ViewBag.ProductList, "Select a product")
+                </td>
+                <td>
+                    <input type="text" id="Price" name="Price" readonly />
+                </td>
+                <td>
+                    <input type="number" id="Amount" name="Amount" />
+                    <button type="button" id="addOrderLine">Add Order Line</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div id="orderLines">
+        <!-- Dynamic order lines will be added here -->
+    </div>
+
+    <input type="submit" value="Place Order" />
 }
 
-<!DOCTYPE html>
-
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Create</title>
-</head>
-<body>
-
-<h4>Order</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="CustomerID" class="control-label"></label>
-                <select asp-for="CustomerID" class ="form-control" asp-items="ViewBag.CustomerName"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="TotalPrice" class="control-label"></label>
-                <input asp-for="TotalPrice" class="form-control" />
-                <span asp-validation-for="TotalPrice" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
+<div id="templateOrderLine" style="display: none;">
+    <table>
+        <tr>
+            <td>
+                @Html.DropDownList("ProductID", (SelectList)ViewBag.ProductList, "Select a product")
+            </td>
+            <td>
+                <input type="text" id="Price" name="Price" readonly />
+            </td>
+            <td>
+                <input type="number" id="Amount" name="Amount" />
+            </td>
+        </tr>
+    </table>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
 
-</body>
-</html>
+<script>
+    $(document).ready(function () {
+        // Initialize a counter for dynamically added order lines
+        var orderLineCount = 0;
+        var products = @Html.Raw(ViewData["Products"]);
+
+        // Handle the "Add Order Line" button click
+        $("#addOrderLine").click(function () {
+            // Clone the template row and update element IDs and names
+            var newOrderLine = $("#templateOrderLine").clone();
+            newOrderLine.find("#ProductID").attr("id", "Orderlines_" + orderLineCount + "__ProductID");
+            newOrderLine.find("#Amount").attr("id", "Orderlines_" + orderLineCount + "__Amount");
+            newOrderLine.find("#Price").attr("id", "Orderlines_" + orderLineCount + "__ActualPrice");
+
+            // Append the new order line to the orderLines div
+            $("#orderLines").append(newOrderLine);
+
+            orderLineCount++;
+        });
+
+        // Update the price when a product is selected
+        $("#ProductID").change(function () {
+            var selectedProductId = $(this).val();
+            var selectedProduct = products.find(p => p.ProductID == parseInt(selectedProductId));
+            var priceInput = $("#Price");
+
+            if (selectedProduct) {
+                // Set the price to the product's price
+                priceInput.val(selectedProduct.Price);
+            } else {
+                // Reset the price to 0 if the product is not found
+                priceInput.val(0);
+            }
+        });
+    });
+</script>
+
+
+
