@@ -15,8 +15,8 @@ namespace Pi4_Patatzaak.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal Price { get; set; }
         public int? PictureID { get; set; }
-        public Pictures? Picture { get; set; }
-        public Discount? Discount { get; set; } // Change List<Discount> to Discount
-        public List<OrderLine> Orderlines { get; set; }
+        public virtual Pictures? Picture { get; set; }
+        public virtual Discount? Discount { get; set; } 
+        public virtual List<OrderLine> Orderlines { get; set; }
     }
 }

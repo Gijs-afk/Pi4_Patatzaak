@@ -9,6 +9,6 @@ namespace Pi4_Patatzaak.Models
         [Required]
         public string FileName { get; set; }
         public string? PictureDescription { get; set;}
-        public List<Product> Products { get; set; }
+        public virtual List<Product> Products { get; set; }
     }
 }

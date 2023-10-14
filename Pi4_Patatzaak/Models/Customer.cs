@@ -12,7 +12,7 @@ namespace Pi4_Patatzaak.Models
         public string Email { get; set; }
         [Required]
         public string Password { get; set; }
-        public List<Order>? Orders { get; set; }
+        public virtual List<Order>? Orders { get; set; }
 
     }
 }

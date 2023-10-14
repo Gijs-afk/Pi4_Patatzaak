@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Pi4_Patatzaak.Data;
 using Pi4_Patatzaak.Logic;
 using Pi4_Patatzaak.Models;
@@ -21,12 +22,14 @@ namespace Pi4_Patatzaak.Controllers
         private readonly AppDbContext _context;
         private readonly OrderLogic _orderLogic;
         private readonly AuthLogic _authLogic;
+        private readonly PricingLogic _pricingLogic;
 
-        public OrdersController(AppDbContext context, OrderLogic orderLogic, AuthLogic authLogic)
+        public OrdersController(AppDbContext context, OrderLogic orderLogic, AuthLogic authLogic, PricingLogic pricingLogic)
         {
             _context = context;
             _orderLogic = orderLogic;
             _authLogic = authLogic;
+            _pricingLogic = pricingLogic;
         }
 
         // GET: Orders
@@ -55,77 +58,110 @@ namespace Pi4_Patatzaak.Controllers
             return View(order);
         }
 
-        // GET: Orders/Create
-        //public IActionResult Create()
-        //{
-        //    ViewData["CustomerID"] = new SelectList(_context.Customers, "CustomerID", "CustomerName");
-        //    return View();
-        //}
-
-        // POST: Orders/Create
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Create([Bind("OrderID")] Order order)
-        //{
-        //    Order newOrder = new Order();
-        //    string customerName = _authLogic.GetUserName(HttpContext.User);
-        //    var customerField = _context.Customers
-        //        .Where(c => c.CustomerName == customerName)
-        //        .FirstOrDefault();
-        //    int UserID = customerField.CustomerID;
-
-        //    newOrder = _orderLogic.CreateOrder(newOrder, UserID);
-
-
-        //    if (ModelState.IsValid)
-        //    {
-        //        _context.Add(order);
-        //        await _context.SaveChangesAsync();
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    ViewData["CustomerID"] = new SelectList(_context.Customers, "CustomerID", "CustomerName", order.CustomerID);
-        //    return View(order);
-        //}
 
 
         [HttpGet]
-        public async Task<IActionResult> Create()
+        public IActionResult Create()
         {
-            var products = await _context.Products.ToListAsync();
-            ViewBag.ProductList = new SelectList(products, "ProductID", "ProductName");
+            var products = _context.Products.ToList();
+
+            foreach (var product in products)
+            {
+                product.Price = _pricingLogic.GetProductPrice(product.ProductID);
+            }
+
+            var productItems = products.Select(p => new SelectListItem
+            {
+                Value = p.ProductID.ToString(),
+                Text = $"{p.ProductName} - Price: ${p.Price:F2}"
+            }).ToList();
+
+            ViewBag.ProductList = new SelectList(productItems, "Value", "Text");
 
             var order = new Order
             {
-                Orderlines = new List<OrderLine>()
+                Orderlines = new List<OrderLine>
+                {
+                    new OrderLine(),
+                    new OrderLine(),
+                    new OrderLine()
+                }
             };
-
-            var productsAsJson = JsonSerializer.Serialize(products);
-            ViewData["Products"] = productsAsJson;
 
             return View(order);
         }
+
+
+
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Order order)
         {
+            string customerName = _authLogic.GetUserName(HttpContext.User);
+            var customerField = _context.Customers
+                .Where(c => c.CustomerName == customerName)
+                .FirstOrDefault();
+            int UserID = customerField.CustomerID;
+
+            order.CustomerID = UserID;
+
             if (ModelState.IsValid)
             {
-                // Create the order and save it to the database
+                
+                List<OrderLine> databaseorderlineList = new List<OrderLine>();
+
+                decimal totalOrderPrice = 0;
+
+                foreach (var orderLine in order.Orderlines)
+                {
+                    var product = _context.Products.FirstOrDefault(p => p.ProductID == orderLine.ProductID);
+                    product.Price = _pricingLogic.GetProductPrice(product.ProductID);
+
+
+                    if (product != null)
+                    {
+                        // Calculate the actual price
+                        orderLine.ActualPrice = product.Price * orderLine.Amount;
+                        totalOrderPrice += orderLine.ActualPrice;
+                        orderLine.OrderID = order.OrderID;
+
+                        // Generate Ordeline for database
+                        OrderLine databaseOrderLine = new OrderLine
+                        {
+                            ProductID = orderLine.ProductID,
+                            Amount = orderLine.Amount,
+                            OrderID = order.OrderID,
+                            ActualPrice = orderLine.ActualPrice
+                        };
+                        
+                        databaseorderlineList.Add(databaseOrderLine);
+
+                    }
+                }
+
+                
                 _context.Orders.Add(order);
+                order.TotalPrice = totalOrderPrice;
                 await _context.SaveChangesAsync();
 
-                // You will add order lines dynamically using JavaScript
-                // No need to add order lines here
+                //save all orderlines to db
+                foreach (var i in databaseorderlineList)
+                {
+                    i.OrderID = order.OrderID;
+                    _context.OrderLines.Add(i);
+                    await _context.SaveChangesAsync();
+                }
 
                 return RedirectToAction(nameof(Index));
             }
 
-            // If the model is not valid, redisplay the form with errors
             var products = await _context.Products.ToListAsync();
             ViewBag.ProductList = new SelectList(products, "ProductID", "ProductName");
             return View(order);
         }
+
 
 
 

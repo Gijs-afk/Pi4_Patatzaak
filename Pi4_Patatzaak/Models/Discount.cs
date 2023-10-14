@@ -10,6 +10,6 @@ namespace Pi4_Patatzaak.Models
         public int ProductID { get; set; }
         [Column(TypeName = "decimal(18,2)")]
         public decimal DiscountPrice { get; set; }
-        public Product Product { get; set; }
+        public virtual Product Product { get; set; }
     }
 }

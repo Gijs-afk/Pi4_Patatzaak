@@ -1,95 +1,90 @@
-﻿@model Order
+﻿@model Pi4_Patatzaak.Models.Order
 
-@using (Html.BeginForm("Create", "Orders", FormMethod.Post))
-{
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h2>Create Order</h2>
+
+<form asp-controller="Orders" asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
     @Html.HiddenFor(model => model.CustomerID)
     @Html.HiddenFor(model => model.Status)
 
     <h4>Select Products:</h4>
-    <table class="table">
+
+    <table class="table" id="productTable">
         <thead>
             <tr>
                 <th>Product</th>
-                <th>Price</th>
                 <th>Quantity</th>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>
-                    @Html.DropDownList("ProductID", (SelectList)ViewBag.ProductList, "Select a product")
-                </td>
-                <td>
-                    <input type="text" id="Price" name="Price" readonly />
-                </td>
-                <td>
-                    <input type="number" id="Amount" name="Amount" />
-                    <button type="button" id="addOrderLine">Add Order Line</button>
-                </td>
-            </tr>
+            @for (var i = 0; i < Model.Orderlines.Count; i++)
+            {
+                <tr>
+                    <td>
+                        @Html.DropDownListFor(model => model.Orderlines[i].ProductID, (SelectList)ViewBag.ProductList, "Select a product", new { @class = "product-dropdown" })
+                    </td>
+                    <td>
+                        <input type="number" asp-for="Orderlines[i].Amount" placeholder="Quantity" />
+                    </td>
+                </tr>
+            }
         </tbody>
     </table>
 
-    <div id="orderLines">
-        <!-- Dynamic order lines will be added here -->
-    </div>
+    <button type="submit">Place Order</button>
 
-    <input type="submit" value="Place Order" />
+    <button type="button" id="addProduct">Add Product</button>
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Define product prices from the ViewBag as JSON
+            var productPrices = @Html.Raw(Json.Serialize(ViewBag.ProductPrices));
+
+            $(".product-dropdown").change(function () {
+                var rowIndex = $(this).closest("tr").index();
+                var selectedProduct = $(this).val();
+                var quantity = $(this).closest("tr").find('input[type="number"]').val();
+                var productPrice = productPrices[selectedProduct];
+
+                // Calculate the updated price
+                var updatedPrice = quantity * productPrice;
+
+                // Update the price span
+                $("#actual-price-" + rowIndex).text("Price: $" + updatedPrice.toFixed(2));
+            });
+
+            $("input[type='number']").on("input", function () {
+                var rowIndex = $(this).closest("tr").index();
+                var selectedProduct = $(this).closest("tr").find('.product-dropdown').val();
+                var quantity = $(this).val();
+                var productPrice = productPrices[selectedProduct];
+
+                // Calculate the updated price
+                var updatedPrice = quantity * productPrice;
+
+                // Update the price span
+                $("#actual-price-" + rowIndex).text("Price: $" + updatedPrice.toFixed(2));
+            });
+
+            $("#addProduct").click(function () {
+                var newRow = $("#productTable tbody tr:last").clone();
+
+                // Clear the price span for the new row
+                newRow.find('.product-price').text('');
+
+                // Clear the quantity input
+                newRow.find('input[type="number"]').val('');
+
+                // Append the new row to the table
+                $("#productTable tbody").append(newRow);
+            });
+        });
+
+    </script>
 }
-
-<div id="templateOrderLine" style="display: none;">
-    <table>
-        <tr>
-            <td>
-                @Html.DropDownList("ProductID", (SelectList)ViewBag.ProductList, "Select a product")
-            </td>
-            <td>
-                <input type="text" id="Price" name="Price" readonly />
-            </td>
-            <td>
-                <input type="number" id="Amount" name="Amount" />
-            </td>
-        </tr>
-    </table>
-</div>
-
-
-<script>
-    $(document).ready(function () {
-        // Initialize a counter for dynamically added order lines
-        var orderLineCount = 0;
-        var products = @Html.Raw(ViewData["Products"]);
-
-        // Handle the "Add Order Line" button click
-        $("#addOrderLine").click(function () {
-            // Clone the template row and update element IDs and names
-            var newOrderLine = $("#templateOrderLine").clone();
-            newOrderLine.find("#ProductID").attr("id", "Orderlines_" + orderLineCount + "__ProductID");
-            newOrderLine.find("#Amount").attr("id", "Orderlines_" + orderLineCount + "__Amount");
-            newOrderLine.find("#Price").attr("id", "Orderlines_" + orderLineCount + "__ActualPrice");
-
-            // Append the new order line to the orderLines div
-            $("#orderLines").append(newOrderLine);
-
-            orderLineCount++;
-        });
-
-        // Update the price when a product is selected
-        $("#ProductID").change(function () {
-            var selectedProductId = $(this).val();
-            var selectedProduct = products.find(p => p.ProductID == parseInt(selectedProductId));
-            var priceInput = $("#Price");
-
-            if (selectedProduct) {
-                // Set the price to the product's price
-                priceInput.val(selectedProduct.Price);
-            } else {
-                // Reset the price to 0 if the product is not found
-                priceInput.val(0);
-            }
-        });
-    });
-</script>
-
-
-

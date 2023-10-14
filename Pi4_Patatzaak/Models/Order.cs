@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Pi4_Patatzaak.Models
 {
@@ -13,9 +15,13 @@ namespace Pi4_Patatzaak.Models
         [Column(TypeName = "decimal(18,2)")]
         public decimal TotalPrice { get; set; }
         public string Status { get; set; } = ("Order arived at the shop");
-        public Customer Customer { get; set; }
-        public List<OrderLine> Orderlines { get; set; }
+
+        [BindNever]
+        public virtual Customer? Customer { get; set; }
+        public virtual List<OrderLine>? Orderlines { get; set; } 
 
 
-    }
 }
+}
+
+
