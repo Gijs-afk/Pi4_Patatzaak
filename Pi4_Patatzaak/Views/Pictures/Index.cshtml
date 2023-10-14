@@ -1,0 +1,49 @@
+﻿@model IEnumerable<Pi4_Patatzaak.Models.Pictures>
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+</head>
+<body>
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.FileName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PictureDescription)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.FileName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PictureDescription)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.PictureID">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.PictureID">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.PictureID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+</body>
+</html>

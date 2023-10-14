@@ -105,13 +105,11 @@ namespace Pi4_Patatzaak.Controllers
                 .FirstOrDefault();
             int UserID = customerField.CustomerID;
 
+            // Fill orderline
             order.CustomerID = UserID;
 
             if (ModelState.IsValid)
             {
-                
-                List<OrderLine> databaseorderlineList = new List<OrderLine>();
-
                 decimal totalOrderPrice = 0;
 
                 foreach (var orderLine in order.Orderlines)
@@ -119,40 +117,18 @@ namespace Pi4_Patatzaak.Controllers
                     var product = _context.Products.FirstOrDefault(p => p.ProductID == orderLine.ProductID);
                     product.Price = _pricingLogic.GetProductPrice(product.ProductID);
 
-
                     if (product != null)
                     {
-                        // Calculate the actual price
+                        // Calculate the actual price & fill orderline
                         orderLine.ActualPrice = product.Price * orderLine.Amount;
                         totalOrderPrice += orderLine.ActualPrice;
                         orderLine.OrderID = order.OrderID;
-
-                        // Generate Ordeline for database
-                        OrderLine databaseOrderLine = new OrderLine
-                        {
-                            ProductID = orderLine.ProductID,
-                            Amount = orderLine.Amount,
-                            OrderID = order.OrderID,
-                            ActualPrice = orderLine.ActualPrice
-                        };
-                        
-                        databaseorderlineList.Add(databaseOrderLine);
-
                     }
                 }
-
                 
                 _context.Orders.Add(order);
                 order.TotalPrice = totalOrderPrice;
                 await _context.SaveChangesAsync();
-
-                //save all orderlines to db
-                foreach (var i in databaseorderlineList)
-                {
-                    i.OrderID = order.OrderID;
-                    _context.OrderLines.Add(i);
-                    await _context.SaveChangesAsync();
-                }
 
                 return RedirectToAction(nameof(Index));
             }
@@ -161,10 +137,6 @@ namespace Pi4_Patatzaak.Controllers
             ViewBag.ProductList = new SelectList(products, "ProductID", "ProductName");
             return View(order);
         }
-
-
-
-
 
 
 
