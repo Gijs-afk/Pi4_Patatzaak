@@ -60,7 +60,7 @@ namespace Pi4_Patatzaak.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["PictureID"] = new SelectList(_context.Pictures, "PictureID", "FileName", product.PictureID);
-            return View(product);
+            return View(product); 
         }
 
         // GET: Products/Edit/5

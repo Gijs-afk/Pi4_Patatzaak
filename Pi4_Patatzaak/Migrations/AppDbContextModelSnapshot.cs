@@ -47,7 +47,7 @@ namespace Pi4_Patatzaak.Migrations
 
                     b.HasKey("CustomerID");
 
-                    b.ToTable("Customers");
+                    b.ToTable("Customers", (string)null);
                 });
 
             modelBuilder.Entity("Pi4_Patatzaak.Models.Discount", b =>
@@ -69,7 +69,7 @@ namespace Pi4_Patatzaak.Migrations
                     b.HasIndex("ProductID")
                         .IsUnique();
 
-                    b.ToTable("Discounts");
+                    b.ToTable("Discounts", (string)null);
                 });
 
             modelBuilder.Entity("Pi4_Patatzaak.Models.Order", b =>
@@ -94,7 +94,7 @@ namespace Pi4_Patatzaak.Migrations
 
                     b.HasIndex("CustomerID");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("Pi4_Patatzaak.Models.OrderLine", b =>
@@ -123,7 +123,7 @@ namespace Pi4_Patatzaak.Migrations
 
                     b.HasIndex("ProductID");
 
-                    b.ToTable("OrderLines");
+                    b.ToTable("OrderLines", (string)null);
                 });
 
             modelBuilder.Entity("Pi4_Patatzaak.Models.Pictures", b =>
@@ -143,7 +143,7 @@ namespace Pi4_Patatzaak.Migrations
 
                     b.HasKey("PictureID");
 
-                    b.ToTable("Pictures");
+                    b.ToTable("Pictures", (string)null);
                 });
 
             modelBuilder.Entity("Pi4_Patatzaak.Models.Product", b =>
@@ -171,7 +171,7 @@ namespace Pi4_Patatzaak.Migrations
 
                     b.HasIndex("PictureID");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("Pi4_Patatzaak.Models.Discount", b =>
